@@ -35,7 +35,7 @@ diff --git a/common.mk b/common.mk
 index de5c7e9..276deb3 100644
 --- a/common.mk
 +++ b/common.mk
-@@ -81,8 +81,10 @@ ldflags_for_lib = $(shell pkg-config --exists 2>/dev/null $(1) && pkg-config --l
+@@ -80,8 +80,10 @@ ldflags_for_lib = $(shell pkg-config --exists 2>/dev/null $(1) && pkg-config --l
  # XCB common stuff
  XCB_CFLAGS  := $(call cflags_for_lib, xcb)
  XCB_CFLAGS  += $(call cflags_for_lib, xcb-event)
@@ -50,7 +50,7 @@ diff --git a/i3bar/include/common.h b/i3bar/include/common.h
 index cb55e0d..eb2930f 100644
 --- a/i3bar/include/common.h
 +++ b/i3bar/include/common.h
-@@ -13,6 +13,7 @@
+@@ -12,6 +12,7 @@
  #include <xcb/xproto.h>
  #include "libi3.h"
  #include "queue.h"
@@ -58,7 +58,7 @@ index cb55e0d..eb2930f 100644
  
  typedef struct rect_t rect;
  
-@@ -42,6 +43,9 @@ struct status_block {
+@@ -41,6 +42,9 @@ struct status_block {
      uint32_t min_width;
      blockalign_t align;
  
@@ -92,7 +92,7 @@ diff --git a/i3bar/src/child.c b/i3bar/src/child.c
 index 4e5e49c..a634b22 100644
 --- a/i3bar/src/child.c
 +++ b/i3bar/src/child.c
-@@ -93,6 +93,8 @@ static int stdin_start_array(void *context) {
+@@ -141,6 +141,8 @@ static int stdin_start_array(void *context) {
          FREE(first->color);
          FREE(first->name);
          FREE(first->instance);
@@ -101,7 +101,7 @@ index 4e5e49c..a634b22 100644
          TAILQ_REMOVE(&statusline_head, first, blocks);
          free(first);
      }
-@@ -147,6 +149,15 @@ static int stdin_string(void *context, const unsigned char *val, unsigned int le
+@@ -189,6 +189,15 @@ static int stdin_string(void *context, const unsigned char *val, unsigned int le
      if (strcasecmp(ctx->last_map_key, "color") == 0) {
          sasprintf(&(ctx->block.color), "%.*s", len, val);
      }
@@ -413,16 +413,7 @@ index 15c68a0..9c24df1 100644
  
  #ifdef XCB_COMPAT
  #include "xcb_compat.h"
-@@ -126,7 +127,7 @@ void refresh_statusline(void) {
- 
-     /* Predict the text width of all blocks (in pixels). */
-     TAILQ_FOREACH(block, &statusline_head, blocks) {
--        if (i3string_get_num_bytes(block->full_text) == 0)
-+        if (i3string_get_num_bytes(block->full_text) == 0 && block->icon == NULL)
-             continue;
- 
-         block->width = predict_text_width(block->full_text);
-@@ -156,6 +157,10 @@ void refresh_statusline(void) {
+@@ -159,6 +160,10 @@ void refresh_statusline(void) {
              block->width += block->sep_block_width;
  
          statusline_width += block->width + block->x_offset + block->x_append;
@@ -433,7 +424,7 @@ index 15c68a0..9c24df1 100644
      }
  
      /* If the statusline is bigger than our screen we need to make sure that
-@@ -171,12 +176,45 @@ void refresh_statusline(void) {
+@@ -174,12 +179,46 @@ void refresh_statusline(void) {
      /* Draw the text of each block. */
      uint32_t x = 0;
      TAILQ_FOREACH(block, &statusline_head, blocks) {
@@ -473,6 +464,7 @@ index 15c68a0..9c24df1 100644
 +            xcb_image_destroy (img);
 +            x += block->icon->width + 5;
 +        }
++
 +
          uint32_t colorpixel = (block->color ? get_colorpixel(block->color) : colors.bar_fg);
          set_font_colors(statusline_ctx, colorpixel, colors.bar_bg);
